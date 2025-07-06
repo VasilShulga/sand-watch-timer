@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sand Watch Timers with Sound in First Phase Only</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .sand-watches {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+    }
+
+    .circle {
+      width: 100px;
+      height: 100px;
+      border: 4px solid #333;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fill {
+      background-color: #3399ff;
+      height: 0%;
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      transition: height 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sand Watch Timers with Sound in First Phase Only</h1>
+  <div class="sand-watches">
+    <div class="circle" id="sand1">
+      <div class="fill" id="fill1"></div>
+    </div>
+    <div class="circle" id="sand2">
+      <div class="fill" id="fill2"></div>
+    </div>
+  </div>
+  <div id="message">Press Start to begin</div>
+  <button onclick="startTimer()">Start</button>
+
+  <script>
+    let cycleCount = 0;
+    const maxCycles = 5;
+    let sound = new Audio('tick.mp3'); // Make sure 'tick.mp3' is in the same directory
+
+    // Helper functions
+    function fillSand(circleId, percent) {
+      document.getElementById('fill' + circleId).style.height = percent + '%';
+    }
+
+    function resetSand() {
+      fillSand(1, 0);
+      fillSand(2, 0);
+    }
+
+    // Starts a new cycle
+    function startCycle() {
+      if (cycleCount >= maxCycles) {
+        document.getElementById('message').textContent = "All cycles completed!";
+        return;
+      }
+      document.getElementById('message').textContent = `Cycle ${cycleCount + 1} starting`;
+      runPhase1(); // start 2-sec phase with a single click sound
+    }
+
+    // First phase: 2 seconds with a single tick sound at the beginning
+    function runPhase1() {
+      const durationMs = 2000; // 2 seconds
+
+      // Play the sound exactly once at the beginning of the phase
+      sound.play();
+
+      const startTime = performance.now();
+
+      // Animate filling
+      function animate() {
+        const now = performance.now();
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        fillSand(1, progress * 100);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // The phase is complete, move to the next phase
+          runPhase2();
+        }
+      }
+
+      animate();
+    }
+
+    // Second phase: 15 seconds, no sound
+    function runPhase2() {
+      const durationMs = 15000; // 15 seconds
+      const startTime = performance.now();
+
+      function animate() {
+        const now = performance.now();
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        fillSand(2, progress * 100);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          // Complete cycle
+          cycleCount++;
+          resetSand();
+          setTimeout(startCycle, 1000); // Start next cycle after 1 second pause
+        }
+      }
+
+      animate();
+    }
+
+    function startTimer() {
+      cycleCount = 0;
+      resetSand();
+      startCycle();
+    }
+  </script>
+</body>
+</html>
